@@ -4,6 +4,7 @@ import psychopy.core  as core
 from pylsl import StreamInfo, StreamOutlet, resolve_stream, StreamInlet, cf_string, local_clock
 import numpy as np
 import utilities
+import socket 
 
 ###Globals
 win = None
@@ -17,6 +18,9 @@ win_h = 600
 refresh_rate = 60 ###Screen refresh rate
 num_trials = 1
 PARADIGM_NAME = 'takeoff_landing'
+
+###Connect to LabRecorder 
+s = socket.create_connection(("localhost", 22345));
 
 ####STIMULUS FUNCTIONS
 ## Display flickering stimulus to screen 
@@ -101,22 +105,26 @@ def mrk_stream_out(stream_name, id):
     return StreamOutlet(stream_info);
 
 def detectMrkStream(mrkOutlet,time_dur):
-    stim_clock = core.CountdownTimer(time_dur)
-    while stim_clock.getTime() > 0:
+    str_dur = core.CountdownTimer(time_dur)
+    while str_dur.getTime() > 0:
         mrkOutlet.push_sample(['wait'])
     return True
 
 ###LSL marker stream outlet and broadcast it for 10s to start recording
 par_mrk_st = mrk_stream_out(PARADIGM_NAME, 'par1')
 print("Broadcasting takeoff and landing marker stream...")
-detectMrkStream(par_mrk_st, 2);
+
+###Once the streams are available, start recording
+s.sendall(b"update\n")
+s.sendall(b"select all\n")
+s.sendall(b"start\n")
 
 ###Begin Experiment and create window
 win = visual.Window(
     screen = 0,
     size=[win_w, win_h],
     units="pix",
-    fullscr=False,
+    fullscr= is_fullscreen,
     color=bg_color,
     gammaErrorPolicy = "ignore", 
 )
@@ -156,4 +164,9 @@ for i in range(num_trials):
     if i == (num_trials-1):
         par_mrk_st.push_sample(['end'])
         win.close()
+        core.wait(1) ###Wait one second before we stop recording
+        s.sendall(b"stop\n")
         core.quit()
+
+
+

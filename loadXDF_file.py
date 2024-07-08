@@ -8,6 +8,7 @@ markers = []
 timestamps = []
 results = []
 has_written = False
+filepath = './plots/marker_plot/mrkr2.csv'
 
 ###Save data to csv file
 if not has_written:
@@ -23,6 +24,4 @@ if not has_written:
                     timestamps.append(tst)
 
     results = zip(markers, timestamps);
-    filepath = './plots/marker_plot/mrkr2.csv'
-
     utilities.write_tuple_to_CSV(filepath, results, ['Marker','Time_stamp'])
