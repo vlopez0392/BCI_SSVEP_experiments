@@ -3,25 +3,50 @@ import numpy as np
 import utilities 
 
 ###Load data 
-data, header = pyxdf.load_xdf('./trials/marker_test_2.xdf')
+data, header = pyxdf.load_xdf('./trials/xdf/full_test1.xdf')
+eeg = []
+channel_labels = []
 markers = []
-timestamps = []
+mrk_timestamps = []
 results = []
 has_written = False
-filepath = './plots/marker_plot/mrkr2.csv'
+eeg_filepath = './trials/csv/eeg_test1.csv'
+marker_filepath = './trials/csv/marker_test1.csv'
+curr_stream_name = None
+eeg_stream_name = 'Cygnus-329004-RawEEG'
+paradigm_stream_name = 'takeoff_landing'
 
-###Save data to csv file
+###Save eeg and marker data to separate csv files
 if not has_written:
     for stream in data:
         for k,v in stream.items():
-            if k == 'info' or k == 'footer':
-                continue
-            elif k == 'time_series':
-                for marker in v:
-                    markers.append(marker[0])
-            else: ##timestamps
-                for tst in v:
-                    timestamps.append(tst)
+            if k == 'info':
+                curr_stream_name = v['name'][0]
 
-    results = zip(markers, timestamps);
-    utilities.write_tuple_to_CSV(filepath, results, ['Marker','Time_stamp'])
+                if curr_stream_name == eeg_stream_name:
+                    channels = v['desc'][0]['channels'][0]['channel']
+                    for ch in channels:
+                        channel_labels.append(ch['label'][0])
+            
+            elif k == 'time_series':
+                if curr_stream_name == eeg_stream_name:
+                    for ts in v:
+                        eeg.append(list(ts))
+                elif curr_stream_name == paradigm_stream_name:
+                    for marker in v:
+                        markers.append(marker[0])
+
+            elif k == 'time_stamps':
+                if curr_stream_name == eeg_stream_name:
+                    for l in eeg:
+                        l.append(tst)
+
+                    header = channel_labels.append('Time_stamp')
+                    utilities.write_rows_to_CSV(eeg_filepath, eeg, channel_labels)
+                
+                elif curr_stream_name == paradigm_stream_name:
+                    for tst in v:
+                        mrk_timestamps.append(tst)
+
+                    results = zip(markers, mrk_timestamps);
+                    utilities.write_tuple_to_CSV(marker_filepath, results, ['Marker','Time_stamp'])

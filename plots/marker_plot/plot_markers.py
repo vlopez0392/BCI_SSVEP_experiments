@@ -3,12 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt 
 
 ####Load CSV files 
-markers = pd.read_csv('./mrkr2.csv') 
+markers = pd.read_csv('./marker_test1.csv') 
 paradigm_onset_delay = 6; ##Initial Text and Fixation cross 
 
 markers['Time_stamp'] = np.round(markers['Time_stamp'] - markers['Time_stamp'] [0] + paradigm_onset_delay).astype(int)
-markers = markers[markers['Marker'] != 'wait']
-print(markers)
+markers = markers[markers['Marker'] != 'b']
 
 ####Plot markers 
 def plotOnsetMarkers(df, num_trials):

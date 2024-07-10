@@ -3,10 +3,11 @@ import psychopy.visual as visual
 import psychopy.core  as core
 from pylsl import StreamInfo, StreamOutlet, resolve_stream, StreamInlet, cf_string, local_clock
 import numpy as np
-import utilities
 import socket 
+import poll_EEG_stream as eeg_stream
 
-###Globals
+###Global variables
+###Window
 win = None
 mrkstream_out = None 
 results_in = None
@@ -16,17 +17,21 @@ bg_color = [0, 0, 0]
 win_w = 800
 win_h = 600
 refresh_rate = 60 ###Screen refresh rate
+
+###Paradigm variables
 num_trials = 1
 PARADIGM_NAME = 'takeoff_landing'
+FREQUENCIES =  [7.5,10,15]
 
-###Connect to LabRecorder 
-s = socket.create_connection(("localhost", 22345));
+##Development variables 
+test_eeg = False
+broadcast_dur = 3
 
 ####STIMULUS FUNCTIONS
 ## Display flickering stimulus to screen 
 def drawFlickeringStimulus(refresh_rate, frequency, my_win, time_dur):
     if(refresh_rate == 60):
-        if(frequency not in [7.5,10,15]):
+        if(frequency not in FREQUENCIES):
             print("Cannot display this flickering stimulus at {} Hz refresh rate".format(refresh_rate));
             return False
         else: 
@@ -104,22 +109,37 @@ def mrk_stream_out(stream_name, id):
 
     return StreamOutlet(stream_info);
 
-def detectMrkStream(mrkOutlet,time_dur):
+def detectMrkStream(mrkOutlet,time_dur, lr_socket):
+    print("Broadcasting takeoff and landing marker stream...")
     str_dur = core.CountdownTimer(time_dur)
+    start_lr = False;
+
     while str_dur.getTime() > 0:
-        mrkOutlet.push_sample(['wait'])
+        mrkOutlet.push_sample(['b'])
+
+        if not start_lr:
+            ###Once the streams are available, start recording with labrecorder
+            lr_socket.sendall(b"update\n")
+            lr_socket.sendall(b"select all\n")
+            lr_socket.sendall(b"start\n")    
+            start_lr = True;
     return True
 
-###LSL marker stream outlet and broadcast it for 10s to start recording
+###Begin experiment
+#####Connect to LabRecorder 
+lr_socket = socket.create_connection(("localhost", 22345))
+
+###LSL marker stream outlet
 par_mrk_st = mrk_stream_out(PARADIGM_NAME, 'par1')
-print("Broadcasting takeoff and landing marker stream...")
 
-###Once the streams are available, start recording
-s.sendall(b"update\n")
-s.sendall(b"select all\n")
-s.sendall(b"start\n")
+if test_eeg:
+    ###Resolve eeg stream 
+    eeg_stream.poll_EEG_stream();
+    
+##Resolve marker stream    
+detectMrkStream(par_mrk_st, broadcast_dur, lr_socket)
 
-###Begin Experiment and create window
+###Create window
 win = visual.Window(
     screen = 0,
     size=[win_w, win_h],
@@ -165,8 +185,11 @@ for i in range(num_trials):
         par_mrk_st.push_sample(['end'])
         win.close()
         core.wait(1) ###Wait one second before we stop recording
-        s.sendall(b"stop\n")
+        lr_socket.sendall(b"stop\n")
         core.quit()
+
+
+
 
 
 
