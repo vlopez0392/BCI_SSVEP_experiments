@@ -16,7 +16,7 @@ import matplotlib
 import pylab
 
 nIntervals=700
-win = visual.Window([1366,768], fullscr=True, allowGUI=False, waitBlanking=True)
+win = visual.Window(fullscr=True, allowGUI=False, waitBlanking=True, screen = 1)
 progBar = visual.PatchStim(win, tex=None, mask=None,
     size=[0,0.05],color='red',pos=[0,-0.9],
     autoLog=False)

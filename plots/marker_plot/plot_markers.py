@@ -4,10 +4,14 @@ import matplotlib.pyplot as plt
 
 ####Load CSV files 
 markers = pd.read_csv('./marker_test1.csv') 
-paradigm_onset_delay = 6; ##Initial Text and Fixation cross 
+paradigm_onset_delay = 6.0; ##Initial Text and Fixation cross delay
+broadcast_marker = 'b';
 
-markers['Time_stamp'] = np.round(markers['Time_stamp'] - markers['Time_stamp'] [0] + paradigm_onset_delay).astype(int)
-markers = markers[markers['Marker'] != 'b']
+###Drop broadcast marker
+markers = markers[markers['Marker'] != broadcast_marker]
+markers = markers.reset_index(drop = True)
+markers['Time_stamp'] = np.round(markers['Time_stamp'] - markers['Time_stamp'] [0] + paradigm_onset_delay).astype(float)
+print(markers.head())
 
 ####Plot markers 
 def plotOnsetMarkers(df, num_trials):
