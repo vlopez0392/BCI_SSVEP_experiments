@@ -16,7 +16,7 @@ curr_stream_name = None
 eeg_stream_name = 'Cygnus-329004-RawEEG'
 paradigm_stream_name = 'takeoff_landing'
 
-###Save eeg and marker data to separate csv files
+###Save eeg and marker data to .csv format
 if not has_written:
     for stream in data:
         for k,v in stream.items():
@@ -53,3 +53,8 @@ if not has_written:
 
                     results = zip(markers, mrk_timestamps);
                     utilities.write_tuple_to_CSV(marker_filepath, results, ['Marker','Time_stamp'])
+
+
+
+
+                    

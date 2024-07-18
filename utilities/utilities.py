@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import csv 
 from mne import create_info, Annotations
+import matplotlib.pyplot as plt
 import matplotlib.colors as pcolors
 
 ######## Stimulus paradigm
@@ -28,7 +29,7 @@ def write_rows_to_CSV(filepath, data_tup_list, header):
 
 
 ######## Data analysis
-###Create mne info object based on the desire deeg device
+###Create mne info object based on the desired deeg device
 def createInfoObject(name, types = 'eeg'):
     print("Now creating mne info object for " + str(name) + str(types) + " device ")
     
@@ -43,8 +44,9 @@ def createInfoObject(name, types = 'eeg'):
     
     return info     
 
-def createMarkerDF(marker_filerpath, broadcast_marker, paradigm_onset_delay):
-    df = pd.read_csv(marker_filerpath) 
+###Marker streams related functionality
+def createMarkerDF(marker_filepath, broadcast_marker, paradigm_onset_delay):
+    df = pd.read_csv(marker_filepath) 
     df = df[df['Marker'] != broadcast_marker]
     df = df.reset_index(drop = True)
     df['Time_stamp'] = np.round(df['Time_stamp'] - df['Time_stamp'] [0] + paradigm_onset_delay).astype(float)
@@ -69,8 +71,60 @@ def createAnnotationObject(marker_df, end_stim, end_exp):
     return Annotations(onset = onset, duration = duration, description = description)
 
 ######## Plotting utilities
+###Save figure to filepath given SSVEP frequency
+def getFP(tf, plot_type = 'eeg'):
+    if tf == 7.5:
+        return './plots/eeg_plots/7_5Hz/' if plot_type == 'eeg' else './plots/psd_plots/7_5Hz/'
+        
+    elif tf == 10:
+        return './plots/eeg_plots/10Hz/' if plot_type == 'eeg' else './plots/psd_plots/10Hz/'
 
-###Nice colors for our occipital and parietal eeg channels
+def getFileNames(tf, plot_type = 'eeg'):
+    if tf == 7.5:
+        return '7_5Hz_EEG.png' if plot_type == 'eeg' else 'avPSD_7_5Hz.png'
+        
+    elif tf == 10:
+        return '10Hz_EEG.png' if plot_type == 'eeg' else 'avPSD_10Hz.png'
+    
+####EEG
+def getEEGParams(tf):
+    if tf == 7.5: 
+        return {"start": 2, "duration":15, "scalings": dict(eeg = 3000e-1)}
+    elif tf == 10: 
+        return {"tmin": 20, "tmax":14, "scalings": dict(eeg = 3000e-1)}
+
+def plotEEG(mne_Raw,tf, params, picks, saveFig = False):
+    [start, duration, scalings] = list(params.values())    
+    fig = mne_Raw.plot(start = start, duration = duration, show_scalebars=True, picks = picks, block = True, scalings = scalings)
+
+    if saveFig:
+        fp = getFP(tf)
+        fileName = getFileNames(tf)
+        fig.savefig(fp+fileName)
+    return True
+
+###PSD
+###Returns a dictionary of best parameters for plotting PSD and EEG signals based on target SSVEP frequencies 
+def getPSDParams(tf):
+    if tf == 7.5: 
+        return {"tmin": 6.5, "tmax":14, "fmin":3, "fmax":65}
+    elif tf == 10: 
+        return {"tmin": 24, "tmax":33, "fmin":3, "fmax":65}
+    
+###PlotAveragePSD
+def plotAveragePSD(mneRaw, tf, params, picks, saveFig = False):
+    [tmin, tmax,fmin,fmax] = list(params.values())
+    fig = mneRaw.compute_psd(method = 'welch', fmin=fmin, fmax = fmax, tmin=tmin ,tmax=tmax, picks = picks).plot(average = True)
+
+    if saveFig:
+        fp = getFP(tf, plot_type='psd')
+        fileName = getFileNames(tf, plot_type='psd')
+        fig.savefig(fp+fileName)
+
+    plt.show()
+    return True
+
+###Returns dictionary of CSS colors to plot spectrum densities of O and P eeg channels
 def getOP_colors(ch):
     css = pcolors.CSS4_COLORS
     
@@ -84,5 +138,22 @@ def getOP_colors(ch):
                 "O2":"deeppink"}
     
     return css[colordic[ch]]
+
+###Plot channel PSD
+def plotChannelPSD(mneRaw, tf, params, picks, saveFig = False):
+        [tmin, tmax,fmin,fmax] = list(params.values())
+
+        for ch in picks:
+            spect = mneRaw.compute_psd(method = 'welch', fmin=fmin, fmax = fmax, tmin=tmin ,tmax=tmax, picks = ch)
+            _, ax = plt.subplots()
+            fig= spect.plot(axes = ax, color = getOP_colors(ch), spatial_colors = False)
+            ax.set_title("PSD of " + str(ch) + " channel at " + str(tf) + "Hz target frequency")
+            
+            if saveFig:
+                fp = getFP(tf, plot_type='psd')
+                fig.savefig(fp+ch+'png')
+            
+            plt.show()
+
 
 
