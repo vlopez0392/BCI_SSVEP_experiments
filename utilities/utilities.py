@@ -151,7 +151,7 @@ def plotChannelPSD(mneRaw, tf, params, picks, saveFig = False):
             
             if saveFig:
                 fp = getFP(tf, plot_type='psd')
-                fig.savefig(fp+ch+'png')
+                fig.savefig(fp+ch+'.png')
             
             plt.show()
 
