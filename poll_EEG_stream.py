@@ -1,7 +1,7 @@
 from pylsl import StreamInfo, resolve_stream
 
 def poll_EEG_stream():
-    print("Looking for EEG streams"); 
+    print("Looking for EEG data streams"); 
     streams = resolve_stream('type','EEG');
 
     ###Get stream info about the EEG device and print it to the console

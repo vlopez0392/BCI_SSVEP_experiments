@@ -13,17 +13,17 @@ FREQUENCIES = [7.5, 10]
 
 ###Dev variables 
 plot = True
-plotEEG = False
-plotPSD = True
+plotEEG = True
+plotPSD = False
 save_eeg_plot = False
-save_psd_plot = True
+save_psd_plot = False
 
 ###Create the info object for our EEG raw data
 info = utils.createInfoObject(name = 'Cygnus')
 occ_all = ["P3","P7","Pz","P4","P8","O1","Oz","O2"]
 print(info)
 
-###Create mne Raw Array
+###Create mne Raw Array object
 eeg_df = pd.read_csv(eeg_filepath)
 print(eeg_df.head())
 eeg_data = np.array(eeg_df.drop("Time_stamp", axis = 1, inplace=False).T)
@@ -31,7 +31,7 @@ eeg_raw = RawArray(eeg_data, info)
 
 ###Notch and FIR low-pass filter
 eeg_raw.set_eeg_reference('average', projection=False, verbose = False)
-eeg_raw.filter(0.1,None, fir_design = "firwin")
+eeg_raw.filter(5,50, fir_design = "firwin")
 eeg_raw.notch_filter(freqs = (60,120))
 
 ###Adding events to the raw object

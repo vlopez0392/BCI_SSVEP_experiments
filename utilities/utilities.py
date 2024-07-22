@@ -78,6 +78,9 @@ def getFP(tf, plot_type = 'eeg'):
         
     elif tf == 10:
         return './plots/eeg_plots/10Hz/' if plot_type == 'eeg' else './plots/psd_plots/10Hz/'
+    
+    elif tf == 15:
+        return './plots/eeg_plots/15Hz/' if plot_type == 'eeg' else './plots/psd_plots/15Hz/'
 
 def getFileNames(tf, plot_type = 'eeg'):
     if tf == 7.5:
@@ -85,6 +88,9 @@ def getFileNames(tf, plot_type = 'eeg'):
         
     elif tf == 10:
         return '10Hz_EEG.png' if plot_type == 'eeg' else 'avPSD_10Hz.png'
+    
+    elif tf == 15: 
+        return '15Hz_EEG.png' if plot_type == 'eeg' else 'avPSD_15Hz.png'
     
 ####EEG
 def getEEGParams(tf):
@@ -107,14 +113,14 @@ def plotEEG(mne_Raw,tf, params, picks, saveFig = False):
 ###Returns a dictionary of best parameters for plotting PSD and EEG signals based on target SSVEP frequencies 
 def getPSDParams(tf):
     if tf == 7.5: 
-        return {"tmin": 6.5, "tmax":14, "fmin":3, "fmax":65}
+        return {"tmin": 6.5, "tmax":14, "fmin":3, "fmax":250}
     elif tf == 10: 
-        return {"tmin": 24, "tmax":33, "fmin":3, "fmax":65}
+        return {"tmin": 24, "tmax":33, "fmin":3, "fmax":250}
     
 ###PlotAveragePSD
 def plotAveragePSD(mneRaw, tf, params, picks, saveFig = False):
     [tmin, tmax,fmin,fmax] = list(params.values())
-    fig = mneRaw.compute_psd(method = 'welch', fmin=fmin, fmax = fmax, tmin=tmin ,tmax=tmax, picks = picks).plot(average = True)
+    fig = mneRaw.compute_psd(method = 'welch', proj = True, fmin=fmin, fmax = fmax, tmin=tmin ,tmax=tmax, picks = picks).plot(average = True)
 
     if saveFig:
         fp = getFP(tf, plot_type='psd')
