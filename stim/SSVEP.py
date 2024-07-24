@@ -274,6 +274,3 @@ def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 6
     else:
         print("Cannot display less than 2 or more than 4 stimuli")
         return False
-
-my_win = launchTestWindow()
-drawMultipleFlicker(getValidFrequencies(60),my_win,60,[6.66,7.5], time_dur=10.0)
