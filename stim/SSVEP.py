@@ -1,6 +1,7 @@
 import psychopy.visual as visual
 import psychopy.core  as core
 import numpy as np
+import keyboard as kb
 
 def createWindow(my_screen, win_w, win_h, is_fullscreen, bg_color, winType):
     return visual.Window(
@@ -13,10 +14,24 @@ def createWindow(my_screen, win_w, win_h, is_fullscreen, bg_color, winType):
         gammaErrorPolicy = "ignore"
     )
 
+def launchTestWindow():
+    return visual.Window(
+        screen = 0,
+        size=[800, 600],
+        units="pix",
+        fullscr= True,
+        color=[0,0,0],
+        winType = 'pyglet',
+        gammaErrorPolicy = "ignore"
+    )
+
 def getValidFrequencies(refresh_rate):
     if refresh_rate == 60:
         return [6.66, 7.5, 8.57, 10, 12, 15]
 
+######################## SINGLE-PATTERN RELATED FUNCTIONS FOR OFFLINE SSVEP EXPERIMENTS ######################## 
+
+###Get on and off patterns for a single element
 def getOnOffPatterns(my_win):
         onPattern =  visual.GratingStim(win = my_win, name = 'on_pattern', 
                                             units = 'pix', tex = None, pos = [0,0],
@@ -42,35 +57,38 @@ def getOnOffPatternDurations(refresh_rate, tf):
         else: 
             durations = {6.66:(4,5), 8.57:(3,4), 12:(2,3)}
             return durations[tf]
+    else:
+        print("Invalid input target frequency {}".format(tf))
+        return False
         
 
 ## Display flickering stimulus to screen 
 def drawFlickeringStim(FREQUENCIES, refresh_rate, frequency, my_win, time_dur):
-    if(refresh_rate == 60):
-        if(frequency not in FREQUENCIES):
-            print("Cannot display this flickering stimulus at {} Hz refresh rate".format(refresh_rate));
-            return False
-        else: 
-            stim_clock = core.CountdownTimer(time_dur)
-            (frame_on, frame_off) = getOnOffPatternDurations(refresh_rate,frequency)
-            (onPattern, offPattern) = getOnOffPatterns(my_win) 
 
-            ###Begin stimulus
-            while stim_clock.getTime() > 0:
-                onPattern.setAutoDraw(True)
+    if(frequency not in getValidFrequencies(refresh_rate)):
+        print("Cannot display this flickering stimulus at {} Hz refresh rate".format(refresh_rate));
+        return False
+    else: 
+        stim_clock = core.CountdownTimer(time_dur)
+        (frame_on, frame_off) = getOnOffPatternDurations(refresh_rate,frequency)
+        (onPattern, offPattern) = getOnOffPatterns(my_win) 
 
-                for _ in range(frame_on):
-                    my_win.flip()
+        ###Begin stimulus
+        while stim_clock.getTime() > 0:
+            onPattern.setAutoDraw(True)
 
-                onPattern.setAutoDraw(False)
-                offPattern.setAutoDraw(True)
+            for _ in range(frame_on):
+                my_win.flip()
 
-                for _ in range(frame_off):
-                    my_win.flip()
+            onPattern.setAutoDraw(False)
+            offPattern.setAutoDraw(True)
 
-                offPattern.setAutoDraw(False)
+            for _ in range(frame_off):
+                my_win.flip()
 
-        return True
+            offPattern.setAutoDraw(False)
+
+    return True
 
 ### Draw a fixation cross to focus on the stimuli 
 def drawFixationCross(my_win, time_dur):
@@ -108,7 +126,6 @@ def displayText(my_text, my_win, time_dur):
         my_win.flip()
     return True
 
-
 ####Get Frame Paths 
 def getFramePaths(target_frequencies):
     frameRoot = './pictures/movie_frames/'
@@ -130,43 +147,42 @@ def saveFlickerFrames(FREQUENCIES, refresh_rate, tf, my_win, time_dur = 1.0):
     framePaths = getFramePaths(FREQUENCIES)
     save_Frames = True
 
-    if(refresh_rate == 60):
-        if(tf not in FREQUENCIES):
-            print("Cannot display this flickering stimulus at {} Hz refresh rate".format(refresh_rate));
-            return False
-        else: 
-            stim_clock = core.CountdownTimer(time_dur)
-            (frame_on, frame_off) = getOnOffPatternDurations(refresh_rate,tf)
-            (onPattern, offPattern) = getOnOffPatterns(my_win) 
+    if(tf not in getValidFrequencies(refresh_rate)):
+        print("Cannot display this flickering stimulus at {} Hz refresh rate".format(refresh_rate));
+        return False
+    else: 
+        stim_clock = core.CountdownTimer(time_dur)
+        (frame_on, frame_off) = getOnOffPatternDurations(refresh_rate,tf)
+        (onPattern, offPattern) = getOnOffPatterns(my_win) 
 
-            ###Begin stimulus
-            while stim_clock.getTime() > 0:
-                onPattern.setAutoDraw(True)
+        ###Begin stimulus
+        while stim_clock.getTime() > 0:
+            onPattern.setAutoDraw(True)
 
-                for frame in range(frame_on):
-                    my_win.flip()
-                    if save_Frames == True:
-                        my_win.getMovieFrame()
-                        my_win.saveMovieFrames(framePaths[tf] + str(frame) + '.png')
+            for frame in range(frame_on):
+                my_win.flip()
+                if save_Frames == True:
+                    my_win.getMovieFrame()
+                    my_win.saveMovieFrames(framePaths[tf] + str(frame) + '.png')
 
-                onPattern.setAutoDraw(False)
-                offPattern.setAutoDraw(True)
+            onPattern.setAutoDraw(False)
+            offPattern.setAutoDraw(True)
 
-                for frame in range(frame_off):
-                    my_win.flip()
-                    if save_Frames == True:
-                        my_win.getMovieFrame()
-                        my_win.saveMovieFrames(framePaths[tf] + str(frame+frame_off) + '.png')
-                        if frame == frame_off-1:
-                            save_Frames = False
+            for frame in range(frame_off):
+                my_win.flip()
+                if save_Frames == True:
+                    my_win.getMovieFrame()
+                    my_win.saveMovieFrames(framePaths[tf] + str(frame+frame_off) + '.png')
+                    if frame == frame_off-1:
+                        save_Frames = False
 
-                offPattern.setAutoDraw(False)
-
-        return True
+            offPattern.setAutoDraw(False)
+            
+    return True
     
 ####Write frame screenshots for all target frequencies 
 def saveAllFrames(FREQUENCIES):
-    win = createWindow(1,800,600,True,[0,0,0],'pyglet');
+    win = launchTestWindow()
     refresh_rate = 60;
 
     for tf in FREQUENCIES:
@@ -178,3 +194,86 @@ def saveAllFrames(FREQUENCIES):
         ###Save frames 
         saveFlickerFrames(FREQUENCIES,refresh_rate,tf,win, 3.0)
 
+######################## MULTI-PATTERN RELATED FUNCTIONS FOR ONLINE SSVEP EXPERIMENTS ######################## 
+
+##Convert seconds to frames 
+def convertTimetoFrames(refresh_rate, time_dur):
+    time_ms = time_dur*1000; 
+
+    frame_dur = 1000/refresh_rate
+    return np.round(time_ms/frame_dur).astype(int)
+
+###Get positions for N stimulus flickers 
+def getStimPositions(num_stim):
+
+    ###Targets are always set in clockwise fashion starting from the leftmost (or) top element
+    stimPos = {2:[[0,300],[0,-300]], 
+               3:[[-300,0],[0,300],[300,0]], 
+               4:[[-300,0],[0,300],[300,0],[0,-300]]}
+    
+    return stimPos[num_stim]
+
+###Get array of base flickering stimuli (white squares) 
+def getBaseElementStimArray(my_win, num_targets, pos):
+    return visual.ElementArrayStim(my_win, units = 'pix', nElements = num_targets, fieldShape = 'circle', 
+                                   xys = pos, colors = [-1.0, -1.0, -1.0], sizes = 100, opacities = 1, elementTex = None, 
+                                   elementMask = None)
+
+###Get on-off frame patterns for any target combination 
+def getMultPattern(refresh_rate, targets):
+    patternDict = {};
+
+    for tf in targets:
+        frame_dur = sum(getOnOffPatternDurations(refresh_rate,tf))
+        patt = []
+
+        for f in range(frame_dur):
+            patt.append(1.0) if f % frame_dur < np.floor(frame_dur/2) else patt.append(-1.0)
+
+        patternDict[tf] = (len(patt), patt)
+
+    return patternDict
+
+###Unpack pattern dictionary to the form [(frame_dur1, [pattern1])... (frame_durN, [patternN])]
+def unpack(targets,patternDict):
+    patts = []
+    
+    for tf in targets:
+        patts.append(patternDict[tf])
+
+    return patts
+
+###Get color pattern from unpacked multipattern dictionary
+def getColor(frame, patts):
+    return [[c[1][frame%c[0]]] for c in patts]
+
+##Draw multiple flickering stimuli to screen 
+def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 600.0):
+
+    ###Get number of stimulus targets
+    num_targets = len(targets)
+    if num_targets >= 2 and num_targets <= 4:
+        for tf in targets:
+            if(tf not in getValidFrequencies(refresh_rate)):
+                print("Cannot display this flickering stimulus at {} Hz refresh rate".format(refresh_rate));
+                return False
+    
+        ###Get positions for each stimulus and array of patterns to draw
+        pos = getStimPositions(num_targets) 
+        multPatt = unpack(targets, getMultPattern(refresh_rate, targets))
+        arrayStim = getBaseElementStimArray(my_win, num_targets, pos)   
+
+        ###Begin Stimulus
+        noFrames = convertTimetoFrames(refresh_rate, time_dur)
+
+        for frame in range(noFrames):
+            arrayStim.colors = getColor(frame, multPatt)
+            arrayStim.draw(my_win)
+
+            my_win.flip()
+    else:
+        print("Cannot display less than 2 or more than 4 stimuli")
+        return False
+
+my_win = launchTestWindow()
+drawMultipleFlicker(getValidFrequencies(60),my_win,60,[6.66,7.5], time_dur=10.0)
