@@ -60,7 +60,7 @@ par_mrk_st = mrk_stream_out(PARADIGM_NAME, 'par1')
 if record_Data:
     if poll_eeg:
         ###Resolve eeg stream 
-        eeg_stream.poll_EEG_stream();
+        eeg_stream.poll_EEG_stream()
     
     #####Connect to LabRecorder 
     lr_socket = socket.create_connection(("localhost", 22345))
@@ -106,7 +106,3 @@ for i in range(NUM_TRIALS):
         if record_Data:
             lr_socket.sendall(b"stop\n")
         core.quit()
-
-
-
-

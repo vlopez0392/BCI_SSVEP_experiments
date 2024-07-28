@@ -180,7 +180,7 @@ def saveFlickerFrames(FREQUENCIES, refresh_rate, tf, my_win, time_dur = 1.0):
             
     return True
     
-####Write frame screenshots for all target frequencies 
+####Write frame screenshots for all target frequencies for single pattern stimuli  
 def saveAllFrames(FREQUENCIES):
     win = launchTestWindow()
     refresh_rate = 60;
@@ -194,6 +194,21 @@ def saveAllFrames(FREQUENCIES):
         ###Save frames 
         saveFlickerFrames(FREQUENCIES,refresh_rate,tf,win, 3.0)
 
+###Display text, fixation cross and stimulus frequency tf
+def textCrossFlickerFreq(FREQUENCIES, refresh_rate, tf, win, mrk_outlet, time_dur = [1.0,1.0,5.0]):
+
+    #Display text for 1.0 s
+    displayText('Now displaying: {} Hz stimulus frequency'.format(str(tf)), win,  time_dur[0])
+
+    ###Display fixation cross for 1.0 s 
+    drawFixationCross(win,  time_dur[1])
+    
+    ###Display flickering stimulus for 5.0s and send event marker to start recording
+    mrk_outlet.push_sample([str(tf) + 'Hz'])
+    drawFlickeringStim(FREQUENCIES, refresh_rate, tf, win, time_dur[2])
+    mrk_outlet.push_sample(['end_s'])
+    drawBlankScreen(win, 1.0)
+
 ######################## MULTI-PATTERN RELATED FUNCTIONS FOR ONLINE SSVEP EXPERIMENTS ######################## 
 
 ##Convert seconds to frames 
@@ -206,17 +221,23 @@ def convertTimetoFrames(refresh_rate, time_dur):
 ###Get positions for N stimulus flickers 
 def getStimPositions(num_stim):
 
-    ###Targets are always set in clockwise fashion starting from the leftmost (or) top element
-    stimPos = {2:[[0,300],[0,-300]], 
-               3:[[-300,0],[0,300],[300,0]], 
-               4:[[-300,0],[0,300],[300,0],[0,-300]]}
+    ##LTRD
+    left =  [-450, 0]
+    top =   [0, 250]
+    right = [450, 0]
+    down =  [0,-250]
+
+    ###Targets are always set in clock-wise fashion starting from the leftmost (or) top element
+    stimPos = {2:[top,down], 
+               3:[left, top, right], 
+               4:[left, top, right, down]}
     
     return stimPos[num_stim]
 
 ###Get array of base flickering stimuli (white squares) 
 def getBaseElementStimArray(my_win, num_targets, pos):
-    return visual.ElementArrayStim(my_win, units = 'pix', nElements = num_targets, fieldShape = 'circle', 
-                                   xys = pos, colors = [-1.0, -1.0, -1.0], sizes = 100, opacities = 1, elementTex = None, 
+    return visual.ElementArrayStim(my_win, units = 'pix', nElements = num_targets, 
+                                   xys = pos, colors = [-1.0, -1.0, -1.0], sizes = 150, opacities = 1, elementTex = None, 
                                    elementMask = None)
 
 ###Get on-off frame patterns for any target combination 
@@ -261,7 +282,7 @@ def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 6
         ###Get positions for each stimulus and array of patterns to draw
         pos = getStimPositions(num_targets) 
         multPatt = unpack(targets, getMultPattern(refresh_rate, targets))
-        arrayStim = getBaseElementStimArray(my_win, num_targets, pos)   
+        arrayStim = getBaseElementStimArray(my_win, num_targets, pos)
 
         ###Begin Stimulus
         noFrames = convertTimetoFrames(refresh_rate, time_dur)
