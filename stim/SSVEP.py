@@ -1,7 +1,7 @@
 import psychopy.visual as visual
 import psychopy.core  as core
 import numpy as np
-import keyboard as kb
+#import keyboard as kb
 
 def createWindow(my_screen, win_w, win_h, is_fullscreen, bg_color, winType):
     return visual.Window(
@@ -295,3 +295,7 @@ def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 6
     else:
         print("Cannot display less than 2 or more than 4 stimuli")
         return False
+
+my_win = launchTestWindow()
+drawMultipleFlicker([6.66, 7.5, 8.57, 10, 12, 15], my_win, 60, [7.5, 6.66,15,12], time_dur = 15.0)
+

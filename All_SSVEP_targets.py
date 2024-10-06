@@ -25,9 +25,9 @@ PARADIGM_NAME = 'all_targets'
 FREQUENCIES =  ssvep.getValidFrequencies(refresh_rate)
 
 ##Development variables 
-record_Data = True
+record_Data = False
 broadcast_dur = 2.0
-poll_eeg = True
+poll_eeg = False
 
 #######MARKER STREAM FUNCTIONS
 ####Create marker stream

@@ -11,7 +11,7 @@ verbose = 40
 FREQUENCIES = ssvep.getValidFrequencies(refresh_rate=60)
 
 ###Dev variables 
-plot = True
+plot = False
 plotEEG = True
 plotPSD = False
 save_eeg_plot = False
@@ -51,7 +51,7 @@ for trial in range(1,7):
 
     ###Plot results
     picks = occ_all
-    best_psd = utils.getBestPSDParams(eeg_raw, FREQUENCIES, picks, dev = False)
+    best_psd = utils.getBestPSDParams(eeg_raw, FREQUENCIES, picks, dev = True)
     for tf in FREQUENCIES:
         if plot:
             ###Plot EEG 
