@@ -17,7 +17,7 @@ num_ch = 64
 target_freq = 12.0;
 target_found = False
 duration = 6.0;
-eeg_data = eeg['data'][:,:,4,5] ##First target, first trial, target frequency is 8.0 Hz
+eeg_data = eeg['data'][:,:,4,5] ##Fourth target, Sixth trial, target frequency is 12.0 Hz
 
 eegStream = lsls_utils.eegStreamOut("benchEEG", sf, eeg_data.shape[0] , "test3000");
 mrkStreamIn = lsls_utils.markerStreamIn("mrkIn", "test_marker_3000_in")
