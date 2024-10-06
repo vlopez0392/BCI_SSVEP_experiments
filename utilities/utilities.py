@@ -159,7 +159,7 @@ def getPSDParams(tf, best_psd_times):
 def getBestPSDParams(mneRaw, FREQUENCIES, picks, dev = False):
     fmin = 6
     fmax = 24 
-    window = 2.0
+    window = 2
     step = 0.5
     sfreq = mneRaw.info["sfreq"]
     
@@ -182,7 +182,7 @@ def getBestPSDParams(mneRaw, FREQUENCIES, picks, dev = False):
             curr_best = 0
 
             while curr_endp <= tmax:
-                spec =  mneRaw.compute_psd(method = 'welch', n_fft = int(sfreq*(curr_endp-curr_startp)), proj = True, fmin=fmin, fmax = fmax, tmin=curr_startp ,tmax=curr_endp, picks = picks, verbose = 50)
+                spec =  mneRaw.compute_psd(method = 'welch', n_fft = int(sfreq*(curr_endp-curr_startp)), proj = False, fmin=fmin, fmax = fmax, tmin=curr_startp ,tmax=curr_endp, picks = picks, verbose = 50)
                 spec_data, freqs = spec.get_data(picks = picks, fmin = fmin, fmax = fmax, return_freqs = True)
                 spec_data = np.average(spec_data, axis = 0)
                 
@@ -247,7 +247,7 @@ def plotAveragePSD(mneRaw, tf, params, picks, paradigm_name, average = True, sav
         if saveFig:
             fp = getFP(tf,paradigm_name, plot_type='psd')
             fileName = getFileNames(tf, plot_type='psd')
-            fig.savefig(fp+fileName)
+            fig.savefig(fp+fileName, dpi = 1000)
             plt.close() 
         else:
             plt.show()
