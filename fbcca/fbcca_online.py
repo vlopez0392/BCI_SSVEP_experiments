@@ -17,9 +17,10 @@ Parameters are as follows:
 '''
 
 def onlineFBCCA(FREQUENCIES, eeg_data_buffer, sf, n_h = 3, n_fb = 5):
+    print("---------------Performing online FBCCA --------------\n")
     fb_coefs = np.power(np.arange(1,n_fb+1),(-1.25)) + 0.25; 
     eeg_data_buffer = np.array(eeg_data_buffer)
-    num_samples, num_ch = eeg_data_buffer.shape
+    num_samples, num_ch = eeg_data_buffer.shape #num ch x num samples
     num_freq = len(FREQUENCIES)
 
     y_ref = cca_ref(FREQUENCIES, sf, num_samples)
@@ -41,12 +42,13 @@ def onlineFBCCA(FREQUENCIES, eeg_data_buffer, sf, n_h = 3, n_fb = 5):
             r[fb, f_i] = curr_r
 
     print("Correlation values per sub-band and target frequency: ")
-    print(r)
+    print(r, "\n")
     rho = np.dot(fb_coefs, r)
 
     print("Weighed correlation values for all sub-band components and target frequency: ")
-    print(rho)
-    return None
+    print(rho, "\n")
+    print("SSVEP frequency: {} Hz \n".format(FREQUENCIES[np.argmax(rho)]))
+    return (True,np.argmax(rho))
 
 
 

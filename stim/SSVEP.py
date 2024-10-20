@@ -1,7 +1,9 @@
 import psychopy.visual as visual
 import psychopy.core  as core
 import numpy as np
-#import keyboard as kb
+import keyboard as kb
+import numpy as np
+from pylsl import resolve_byprop, StreamInlet
 
 def createWindow(my_screen, win_w, win_h, is_fullscreen, bg_color, winType):
     return visual.Window(
@@ -92,6 +94,7 @@ def drawFlickeringStim(FREQUENCIES, refresh_rate, frequency, my_win, time_dur):
 
 ### Draw a fixation cross to focus on the stimuli 
 def drawFixationCross(my_win, time_dur):
+    
     rect_hor = visual.Rect(win = my_win, units='pix', 
                 pos=(0, 0), ori = 0,
                 width = 20, height = 100, fillColor=[1.0, -1.0, -1.0], lineColor=[1.0, -1.0, -1.0] )
@@ -268,9 +271,73 @@ def unpack(targets,patternDict):
 def getColor(frame, patts):
     return [[c[1][frame%c[0]]] for c in patts]
 
-##Draw multiple flickering stimuli to screen 
-def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 600.0):
 
+###Draw arrows to choose correct stimuli
+def computeArrowHeadPosition(index, stimPos):
+    direction = stimPos[index];
+    pix_shift = 150
+
+    if len(stimPos) == 2: ##Up and down arrows only
+        if index == 0:
+            pos = [0, direction[1] - pix_shift]
+            return (pos,0)
+        
+        pos = [0, direction[1] + pix_shift]
+        return (pos,180)
+
+    else:
+        if index == 0:
+            pos = ([direction[0] + pix_shift, 0], -90)
+        elif index == 1:
+            pos = ([0, direction[1] - pix_shift], 0)    
+        elif index == 2:
+            pos = ([direction[0] - pix_shift, 0], 90)
+        else:
+            pos = ([0, direction[1] + pix_shift],180)
+
+        return pos
+
+def drawArrow(my_win, index, stimPos, orient, arrayStim = None):
+    arrowHeadPos, arrowHeadOri = computeArrowHeadPosition(index, stimPos)
+
+    bar_length = int(np.max(np.abs(arrowHeadPos)))
+    if orient > 0:
+        bar_length *= 1.85
+    else:
+        bar_length *= 1.5
+
+    ##Arrow body
+    rect = visual.Rect(win = my_win, units='pix', 
+        pos=(0, 0), ori = orient,
+        width = 20, height = bar_length, fillColor=[1.0, -1.0, -1.0], lineColor=[1.0, -1.0, -1.0] )
+    
+    ##Draw arrowhead
+    arrow = visual.Polygon(win = my_win, edges = 3, units='pix', 
+        pos=arrowHeadPos, ori = arrowHeadOri,
+        size =100.0, fillColor=[1.0, -1.0, -1.0], lineColor=[1.0, -1.0, -1.0] )
+
+    stim_clock = core.CountdownTimer(2.0)
+    while stim_clock.getTime() > 0:
+        if arrayStim is not None:
+            arrayStim.draw()
+        arrow.draw()
+        rect.draw()
+        my_win.flip()
+
+def drawArrows(index, stimPos, my_win, arrayStim = None):
+    ##Draw arrows
+    if len(stimPos) == 2:            ##Vertical arrow
+        drawArrow(my_win, index, stimPos, 0, arrayStim)
+    else: 
+        if index == 0 or index == 2: ##Horizontal arrow or Vertical arrow
+            drawArrow(my_win, index, stimPos, 90, arrayStim)
+        else:
+            drawArrow(my_win, index, stimPos, 0, arrayStim)
+
+        
+##Draw multiple flickering stimuli to screen
+def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 600.0, mrk_st = None):
+    
     ###Get number of stimulus targets
     num_targets = len(targets)
     if num_targets >= 2 and num_targets <= 4:
@@ -289,13 +356,23 @@ def drawMultipleFlicker(FREQUENCIES, my_win, refresh_rate, targets, time_dur = 6
 
         for frame in range(noFrames):
             arrayStim.colors = getColor(frame, multPatt)
-            arrayStim.draw(my_win)
-
+            arrayStim.draw()
             my_win.flip()
-    else:
+
+            ###Draw arrows for real-time user feedback
+            if mrk_st is not None:
+                mrk, tst = mrk_st.pull_sample(timeout = 0.0)
+                if mrk is not None:
+                    if mrk[0] == "back_done":                       
+                        result = int(mrk[1])
+                        drawArrows(result, pos, my_win, arrayStim)
+                        mrk = None
+                    elif mrk[0] == "draw_done":
+                        displayText("Task is done", my_win, 2.0)
+                        core.quit()
+    else:   
         print("Cannot display less than 2 or more than 4 stimuli")
         return False
 
-my_win = launchTestWindow()
-drawMultipleFlicker([6.66, 7.5, 8.57, 10, 12, 15], my_win, 60, [7.5, 6.66,15,12], time_dur = 15.0)
+
 
